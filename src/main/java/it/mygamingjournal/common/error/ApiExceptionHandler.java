@@ -3,6 +3,7 @@ package it.mygamingjournal.common.error;
 import it.mygamingjournal.auth.InvalidCredentialsException;
 import it.mygamingjournal.catalog.RawgUnavailableException;
 import it.mygamingjournal.catalog.RawgUpstreamException;
+import it.mygamingjournal.media.MediaUnavailableException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -50,6 +51,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(RawgUpstreamException.class)
     ProblemDetail handleRawgUpstream(RawgUpstreamException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
+    }
+
+    @ExceptionHandler(MediaUnavailableException.class)
+    ProblemDetail handleMediaUnavailable(MediaUnavailableException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

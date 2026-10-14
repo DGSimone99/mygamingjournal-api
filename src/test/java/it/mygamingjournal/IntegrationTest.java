@@ -3,6 +3,7 @@ package it.mygamingjournal;
 import com.jayway.jsonpath.JsonPath;
 import it.mygamingjournal.catalog.CatalogService;
 import it.mygamingjournal.catalog.RawgApi;
+import it.mygamingjournal.media.ImageStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -32,6 +33,9 @@ public abstract class IntegrationTest {
 
     @MockitoBean
     protected RawgApi rawgApi;
+
+    @MockitoBean
+    protected ImageStorage imageStorage;
 
     @Autowired
     protected CatalogService catalogService;
