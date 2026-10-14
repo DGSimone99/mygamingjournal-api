@@ -1,5 +1,6 @@
 package it.mygamingjournal.user;
 
+import it.mygamingjournal.auth.PasswordPolicy;
 import it.mygamingjournal.common.error.BadRequestException;
 import it.mygamingjournal.common.error.NotFoundException;
 import it.mygamingjournal.common.paging.PageParams;
@@ -53,6 +54,7 @@ public class ProfileService {
 
     @Transactional
     public void changePassword(long userId, ChangePasswordRequest request) {
+        PasswordPolicy.requireBcryptCompatible(request.newPassword());
         User user = requireUser(userId);
         if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
             throw new BadRequestException("Current password is incorrect");

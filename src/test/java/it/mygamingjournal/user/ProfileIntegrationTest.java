@@ -2,7 +2,11 @@ package it.mygamingjournal.user;
 
 import it.mygamingjournal.IntegrationTest;
 import it.mygamingjournal.catalog.RawgFixtures;
+import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
@@ -19,6 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ProfileIntegrationTest extends IntegrationTest {
+
+    @Autowired
+    EntityManagerFactory entityManagerFactory;
 
     @Test
     void meReturnsProfileAndStats() throws Exception {
@@ -104,6 +111,22 @@ class ProfileIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.items", hasSize(0)));
         mockMvc.perform(get("/api/users"))
                 .andExpect(jsonPath("$.totalItems").value(3));
+    }
+
+    @Test
+    void userListingDoesNotLoadCollectionsPerUser() throws Exception {
+        for (String name : new String[]{"mario", "luigi", "peach", "toad", "yoshi"}) {
+            register(name);
+        }
+        Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+        statistics.setStatisticsEnabled(true);
+        statistics.clear();
+        try {
+            mockMvc.perform(get("/api/users")).andExpect(jsonPath("$.totalItems").value(5));
+            assertThat(statistics.getCollectionFetchCount()).isZero();
+        } finally {
+            statistics.setStatisticsEnabled(false);
+        }
     }
 
     @Test

@@ -24,6 +24,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        PasswordPolicy.requireBcryptCompatible(request.password());
         String username = request.username().trim();
         String email = request.email().trim().toLowerCase(Locale.ROOT);
         if (users.existsByUsernameIgnoreCase(username)) {

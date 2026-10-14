@@ -55,7 +55,7 @@ public class CatalogService {
 
     public PageResponse<GameSummary> searchGames(GameQuery query, PageParams paging) {
         Map<String, String> params = query.toRawgParams(paging);
-        return searchCache.get(new TreeMap<>(params).toString(), key -> {
+        return cached(searchCache, new TreeMap<>(params).toString(), () -> {
             try {
                 RawgPage<RawgGame> page = call(() -> rawg.listGames(params));
                 List<GameSummary> items = nullSafe(page.results()).stream().map(RawgMapper::toSummary).toList();
@@ -68,7 +68,7 @@ public class CatalogService {
     }
 
     public GameDetails getGame(long id) {
-        return detailsCache.get(id, key -> {
+        return cached(detailsCache, id, () -> {
             try {
                 var game = call(() -> rawg.getGame(id));
                 List<String> screenshots = nullSafe(call(() -> rawg.getScreenshots(id)).results()).stream()
@@ -82,7 +82,7 @@ public class CatalogService {
     }
 
     public List<GameAchievement> getAchievements(long id) {
-        return achievementsCache.get(id, key -> {
+        return cached(achievementsCache, id, () -> {
             try {
                 List<GameAchievement> all = new ArrayList<>();
                 for (int page = 1; page <= MAX_ACHIEVEMENT_PAGES; page++) {
@@ -101,7 +101,7 @@ public class CatalogService {
     }
 
     public RelatedGames getRelated(long id) {
-        return relatedCache.get(id, key -> {
+        return cached(relatedCache, id, () -> {
             try {
                 return new RelatedGames(
                         summaries(call(() -> rawg.getSeries(id))),
@@ -114,12 +114,12 @@ public class CatalogService {
     }
 
     public List<NamedItem> getGenres() {
-        return taxonomyCache.get("genres", key ->
+        return cached(taxonomyCache, "genres", () ->
                 nullSafe(call(() -> rawg.getGenres(40)).results()).stream().map(RawgMapper::toNamed).toList());
     }
 
     public List<NamedItem> getPlatforms() {
-        return taxonomyCache.get("platforms", key ->
+        return cached(taxonomyCache, "platforms", () ->
                 nullSafe(call(rawg::getParentPlatforms).results()).stream().map(RawgMapper::toNamed).toList());
     }
 
@@ -185,6 +185,21 @@ public class CatalogService {
 
     private static NotFoundException gameNotFound(long id) {
         return new NotFoundException("Game " + id + " not found");
+    }
+
+    /**
+     * Read-through without Cache.get(key, loader): that runs the loader inside ConcurrentHashMap.compute, whose
+     * monitor pins virtual threads during the blocking HTTP call (JDK 21) and serializes parallel enrichment.
+     * Two concurrent misses may both call RAWG; that is cheaper than the pinning.
+     */
+    private static <K, V> V cached(Cache<K, V> cache, K key, Supplier<V> loader) {
+        V hit = cache.getIfPresent(key);
+        if (hit != null) {
+            return hit;
+        }
+        V value = loader.get();
+        cache.put(key, value);
+        return value;
     }
 
     private static <K, V> Cache<K, V> cache(Duration ttl, long maxSize) {

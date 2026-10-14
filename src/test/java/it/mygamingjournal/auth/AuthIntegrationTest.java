@@ -65,6 +65,16 @@ class AuthIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void passwordOver72BytesIs400NotACrash() throws Exception {
+        // 40 characters but 80 UTF-8 bytes: BCrypt only accepts 72 bytes.
+        String password = "è".repeat(40);
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"mario\",\"email\":\"mario@example.com\",\"password\":\"" + password + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Password must be at most 72 bytes"));
+    }
+
+    @Test
     void loginAcceptsUsernameOrEmailInAnyCase() throws Exception {
         register("mario");
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)

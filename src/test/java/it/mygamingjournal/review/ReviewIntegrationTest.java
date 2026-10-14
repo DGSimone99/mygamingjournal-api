@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -23,7 +26,11 @@ class ReviewIntegrationTest extends IntegrationTest {
     }
 
     private void review(TestUser user, String text, int score) throws Exception {
-        mockMvc.perform(put("/api/games/3328/reviews/me").header(HttpHeaders.AUTHORIZATION, bearer(user))
+        review(user, text, score, 3328);
+    }
+
+    private void review(TestUser user, String text, int score, long gameId) throws Exception {
+        mockMvc.perform(put("/api/games/" + gameId + "/reviews/me").header(HttpHeaders.AUTHORIZATION, bearer(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"text\":\"%s\",\"score\":%d}".formatted(text, score)))
                 .andExpect(status().isOk());
@@ -95,6 +102,19 @@ class ReviewIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.community.averageScore").value(8.5))
                 .andExpect(jsonPath("$.community.reviewCount").value(2))
                 .andExpect(jsonPath("$.community.libraryCount").value(1));
+    }
+
+    @Test
+    void noDatabaseConnectionIsHeldWhileCallingRawg() throws Exception {
+        TestUser mario = register("mario");
+        AtomicInteger heldDuringRawg = stubGameRecordingHeldConnections(1, "One");
+
+        review(mario, "Good", 7, 1);
+        catalogService.clearCaches();
+        mockMvc.perform(get("/api/users/" + mario.id() + "/reviews"))
+                .andExpect(jsonPath("$.items[0].game.name").value("One"));
+
+        assertThat(heldDuringRawg.get()).isZero();
     }
 
     @Test

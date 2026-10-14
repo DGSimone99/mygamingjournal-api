@@ -13,12 +13,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/** As in LibraryService, RAWG is only called outside database transactions. */
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
@@ -29,6 +31,7 @@ public class ReviewService {
     private final UserRepository users;
     private final ProfileService profiles;
     private final CatalogService catalog;
+    private final TransactionTemplate transaction;
     private final Clock clock;
 
     @Transactional(readOnly = true)
@@ -38,26 +41,30 @@ public class ReviewService {
         return PageResponse.of(page, paging, review -> ReviewResponse.of(review, authors.get(review.getUserId()), null));
     }
 
-    @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> listForUser(long userId, PageParams paging) {
-        UserSummary author = UserSummary.from(profiles.requireUser(userId));
-        Page<Review> page = reviews.findByUserId(userId, paging.toPageable(NEWEST_FIRST));
-        Map<Long, GameSummary> games = catalog.getSummaries(page.getContent().stream().map(Review::getRawgGameId).toList());
-        return PageResponse.of(page, paging, review -> ReviewResponse.of(review, author, games.get(review.getRawgGameId())));
+        UserReviews loaded = transaction.execute(tx -> new UserReviews(
+                UserSummary.from(profiles.requireUser(userId)),
+                reviews.findByUserId(userId, paging.toPageable(NEWEST_FIRST))));
+        Map<Long, GameSummary> games = catalog.getSummaries(
+                loaded.page().getContent().stream().map(Review::getRawgGameId).toList());
+        return PageResponse.of(loaded.page(), paging,
+                review -> ReviewResponse.of(review, loaded.author(), games.get(review.getRawgGameId())));
     }
 
-    @Transactional
     public ReviewResponse upsertMine(long userId, long rawgGameId, ReviewRequest request) {
-        Instant now = clock.instant();
-        Review review = reviews.findByUserIdAndRawgGameId(userId, rawgGameId).orElseGet(() -> {
+        if (reviews.findByUserIdAndRawgGameId(userId, rawgGameId).isEmpty()) {
             catalog.getGame(rawgGameId); // 404 if RAWG does not know this game
-            return new Review(userId, rawgGameId, now);
+        }
+        return transaction.execute(tx -> {
+            Instant now = clock.instant();
+            Review review = reviews.findByUserIdAndRawgGameId(userId, rawgGameId)
+                    .orElseGet(() -> new Review(userId, rawgGameId, now));
+            review.setText(request.text().trim());
+            review.setScore(request.score());
+            review.setUpdatedAt(now);
+            reviews.save(review);
+            return ReviewResponse.of(review, UserSummary.from(profiles.requireUser(userId)), null);
         });
-        review.setText(request.text().trim());
-        review.setScore(request.score());
-        review.setUpdatedAt(now);
-        reviews.save(review);
-        return ReviewResponse.of(review, UserSummary.from(profiles.requireUser(userId)), null);
     }
 
     @Transactional
@@ -68,5 +75,8 @@ public class ReviewService {
     private Map<Long, UserSummary> authorsOf(Page<Review> page) {
         return users.findAllById(page.getContent().stream().map(Review::getUserId).distinct().toList()).stream()
                 .collect(Collectors.toMap(User::getId, UserSummary::from));
+    }
+
+    private record UserReviews(UserSummary author, Page<Review> page) {
     }
 }

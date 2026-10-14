@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
@@ -172,6 +174,19 @@ class LibraryIntegrationTest extends IntegrationTest {
         mockMvc.perform(delete("/api/me/library/1").header(HttpHeaders.AUTHORIZATION, bearer(mario)))
                 .andExpect(status().isNoContent());
         assertThat(experienceOf(mario)).isZero();
+    }
+
+    @Test
+    void noDatabaseConnectionIsHeldWhileCallingRawg() throws Exception {
+        TestUser mario = register("mario");
+        AtomicInteger heldDuringRawg = stubGameRecordingHeldConnections(3328, "Baldur's Gate 3");
+
+        putEntry(mario, 3328, "{\"status\":\"PLAYING\"}");
+        catalogService.clearCaches();
+        mockMvc.perform(get("/api/me/library").header(HttpHeaders.AUTHORIZATION, bearer(mario)))
+                .andExpect(jsonPath("$.items[0].game.name").value("Baldur's Gate 3"));
+
+        assertThat(heldDuringRawg.get()).isZero();
     }
 
     @Test
