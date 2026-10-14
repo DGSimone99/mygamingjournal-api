@@ -1,13 +1,18 @@
 package it.mygamingjournal;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -25,5 +30,24 @@ public abstract class IntegrationTest {
     void cleanDatabase() {
         // Every user-owned table references users, so the cascade empties them all.
         jdbcTemplate.execute("TRUNCATE users RESTART IDENTITY CASCADE");
+    }
+
+    protected TestUser register(String username) throws Exception {
+        String body = """
+                {"username":"%s","email":"%s@example.com","password":"password123"}
+                """.formatted(username, username);
+        String json = mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Number id = JsonPath.read(json, "$.user.id");
+        String token = JsonPath.read(json, "$.accessToken");
+        return new TestUser(id.longValue(), token);
+    }
+
+    protected static String bearer(TestUser user) {
+        return "Bearer " + user.token();
+    }
+
+    public record TestUser(long id, String token) {
     }
 }
