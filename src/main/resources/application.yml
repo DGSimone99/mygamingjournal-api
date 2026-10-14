@@ -35,6 +35,7 @@ rawg:
   api-key: ${RAWG_API_KEY:}
 
 springdoc:
+  default-produces-media-type: application/json
   api-docs:
     enabled: false
   swagger-ui:

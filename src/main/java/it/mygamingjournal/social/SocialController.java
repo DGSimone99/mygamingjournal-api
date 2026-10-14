@@ -5,6 +5,7 @@ import it.mygamingjournal.common.paging.PageParams;
 import it.mygamingjournal.common.paging.PageResponse;
 import it.mygamingjournal.user.UserSummary;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ public class SocialController {
     private final FollowService follows;
 
     @GetMapping
-    public PageResponse<UserSummary> following(@AuthenticationPrincipal AuthUser me, @Valid PageParams paging) {
+    public PageResponse<UserSummary> following(@AuthenticationPrincipal AuthUser me, @Valid @ParameterObject PageParams paging) {
         return follows.following(me.id(), paging);
     }
 

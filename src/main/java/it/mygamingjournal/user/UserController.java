@@ -8,6 +8,7 @@ import it.mygamingjournal.library.LibraryEntryResponse;
 import it.mygamingjournal.library.LibraryService;
 import it.mygamingjournal.library.LibrarySort;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +57,7 @@ public class UserController {
 
     @GetMapping("/users")
     public PageResponse<UserSummary> searchUsers(@RequestParam(required = false) @Size(max = 50) String search,
-            @Valid PageParams paging) {
+            @Valid @ParameterObject PageParams paging) {
         return profiles.search(search, paging);
     }
 
@@ -69,7 +70,7 @@ public class UserController {
     public PageResponse<LibraryEntryResponse> getUserLibrary(@PathVariable @Positive long userId,
             @RequestParam(required = false) GameStatus status,
             @RequestParam(required = false) String sort,
-            @Valid PageParams paging) {
+            @Valid @ParameterObject PageParams paging) {
         profiles.requireUser(userId);
         return library.getLibrary(userId, status, LibrarySort.fromParam(sort), paging);
     }

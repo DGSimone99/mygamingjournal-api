@@ -4,6 +4,7 @@ import it.mygamingjournal.common.paging.PageParams;
 import it.mygamingjournal.common.paging.PageResponse;
 import it.mygamingjournal.review.CommunityStatsService;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,7 @@ public class CatalogController {
     private final CommunityStatsService communityStats;
 
     @GetMapping("/games")
-    public PageResponse<GameSummary> searchGames(@Valid GameQuery query, @Valid PageParams paging) {
+    public PageResponse<GameSummary> searchGames(@Valid @ParameterObject GameQuery query, @Valid @ParameterObject PageParams paging) {
         return catalog.searchGames(query, paging);
     }
 

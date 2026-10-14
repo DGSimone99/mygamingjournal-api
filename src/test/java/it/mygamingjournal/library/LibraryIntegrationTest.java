@@ -190,6 +190,20 @@ class LibraryIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void singleEntryCanBeRead() throws Exception {
+        TestUser mario = register("mario");
+        RawgFixtures.stubGame(rawgApi, 3328, "Baldur's Gate 3");
+        putEntry(mario, 3328, "{\"status\":\"PLAYING\",\"notes\":\"Act 2\"}");
+
+        mockMvc.perform(get("/api/me/library/3328").header(HttpHeaders.AUTHORIZATION, bearer(mario)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.notes").value("Act 2"))
+                .andExpect(jsonPath("$.game.name").value("Baldur's Gate 3"));
+        mockMvc.perform(get("/api/me/library/1").header(HttpHeaders.AUTHORIZATION, bearer(mario)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void libraryRequiresAuthentication() throws Exception {
         mockMvc.perform(get("/api/me/library")).andExpect(status().isUnauthorized());
     }

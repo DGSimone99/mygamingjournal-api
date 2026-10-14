@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/games/*/available-players").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/games/*/reviews/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/games/**", "/api/genres", "/api/platforms",
                                 "/api/users", "/api/users/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error").permitAll()

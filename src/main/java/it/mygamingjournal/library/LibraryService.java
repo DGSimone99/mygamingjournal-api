@@ -47,6 +47,11 @@ public class LibraryService {
         return new PageResponse<>(enrich(loaded), paging.page(), paging.pageSize(), loaded.total());
     }
 
+    public LibraryEntryResponse getEntry(long userId, long rawgGameId) {
+        LoadedEntries loaded = transaction.execute(tx -> load(List.of(requireEntry(userId, rawgGameId)), 1));
+        return enrich(loaded).getFirst();
+    }
+
     @Transactional(readOnly = true)
     public Map<Long, GameStatus> getIndex(long userId) {
         return entries.findIndexByUserId(userId).stream()

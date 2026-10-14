@@ -4,6 +4,7 @@ import it.mygamingjournal.auth.AuthUser;
 import it.mygamingjournal.common.paging.PageParams;
 import it.mygamingjournal.common.paging.PageResponse;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,13 +33,18 @@ public class LibraryController {
     public PageResponse<LibraryEntryResponse> getLibrary(@AuthenticationPrincipal AuthUser me,
             @RequestParam(required = false) GameStatus status,
             @RequestParam(required = false) String sort,
-            @Valid PageParams paging) {
+            @Valid @ParameterObject PageParams paging) {
         return library.getLibrary(me.id(), status, LibrarySort.fromParam(sort), paging);
     }
 
     @GetMapping("/index")
     public Map<Long, GameStatus> getIndex(@AuthenticationPrincipal AuthUser me) {
         return library.getIndex(me.id());
+    }
+
+    @GetMapping("/{rawgGameId}")
+    public LibraryEntryResponse getEntry(@AuthenticationPrincipal AuthUser me, @PathVariable @Positive long rawgGameId) {
+        return library.getEntry(me.id(), rawgGameId);
     }
 
     @PutMapping("/{rawgGameId}")

@@ -4,6 +4,7 @@ import it.mygamingjournal.auth.AuthUser;
 import it.mygamingjournal.common.paging.PageParams;
 import it.mygamingjournal.common.paging.PageResponse;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class MatchmakingController {
             @PathVariable @Positive long rawgGameId,
             @RequestParam(required = false) @Pattern(regexp = "^[a-z0-9-]+$") String platform,
             @RequestParam(required = false) @Pattern(regexp = "^[a-z]{2}$") String language,
-            @Valid PageParams paging) {
+            @Valid @ParameterObject PageParams paging) {
         return matchmaking.findAvailablePlayers(me.id(), rawgGameId, platform, language, paging);
     }
 }

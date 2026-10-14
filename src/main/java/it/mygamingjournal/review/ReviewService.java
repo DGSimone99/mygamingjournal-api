@@ -2,6 +2,7 @@ package it.mygamingjournal.review;
 
 import it.mygamingjournal.catalog.CatalogService;
 import it.mygamingjournal.catalog.GameSummary;
+import it.mygamingjournal.common.error.NotFoundException;
 import it.mygamingjournal.common.paging.PageParams;
 import it.mygamingjournal.common.paging.PageResponse;
 import it.mygamingjournal.user.ProfileService;
@@ -65,6 +66,13 @@ public class ReviewService {
             reviews.save(review);
             return ReviewResponse.of(review, UserSummary.from(profiles.requireUser(userId)), null);
         });
+    }
+
+    @Transactional(readOnly = true)
+    public ReviewResponse getMine(long userId, long rawgGameId) {
+        Review review = reviews.findByUserIdAndRawgGameId(userId, rawgGameId)
+                .orElseThrow(() -> new NotFoundException("You have not reviewed this game"));
+        return ReviewResponse.of(review, UserSummary.from(profiles.requireUser(userId)), null);
     }
 
     @Transactional

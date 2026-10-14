@@ -118,6 +118,20 @@ class ReviewIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void ownReviewCanBeRead() throws Exception {
+        TestUser mario = register("mario");
+        mockMvc.perform(get("/api/games/3328/reviews/me").header(HttpHeaders.AUTHORIZATION, bearer(mario)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("You have not reviewed this game"));
+        review(mario, "Good", 7);
+
+        mockMvc.perform(get("/api/games/3328/reviews/me").header(HttpHeaders.AUTHORIZATION, bearer(mario)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.text").value("Good"))
+                .andExpect(jsonPath("$.author.username").value("mario"));
+    }
+
+    @Test
     void deletedAccountsReviewsDisappear() throws Exception {
         TestUser mario = register("mario");
         review(mario, "Good", 7);
