@@ -2,6 +2,7 @@ package it.mygamingjournal.catalog;
 
 import it.mygamingjournal.common.paging.PageParams;
 import it.mygamingjournal.common.paging.PageResponse;
+import it.mygamingjournal.review.CommunityStatsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.List;
 public class CatalogController {
 
     private final CatalogService catalog;
+    private final CommunityStatsService communityStats;
 
     @GetMapping("/games")
     public PageResponse<GameSummary> searchGames(@Valid GameQuery query, @Valid PageParams paging) {
@@ -26,7 +28,7 @@ public class CatalogController {
 
     @GetMapping("/games/{rawgGameId}")
     public GameDetails getGame(@PathVariable @Positive long rawgGameId) {
-        return catalog.getGame(rawgGameId);
+        return catalog.getGame(rawgGameId).withCommunity(communityStats.forGame(rawgGameId));
     }
 
     @GetMapping("/games/{rawgGameId}/achievements")
