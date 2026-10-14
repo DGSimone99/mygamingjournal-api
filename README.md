@@ -1,28 +1,46 @@
-# 🗄️ MyGamingJournal - Backend
+# 🎮 MyGamingJournal API
 
-Backend del progetto **MyGamingJournal**, una web app che permette agli utenti di gestire la propria libreria videoludica, monitorare progressi, statistiche e trofei, e trovare altri giocatori in base a preferenze condivise.
+![CI](https://github.com/DGSimone99/mygamingjournal-api/actions/workflows/ci.yml/badge.svg)
 
-🔗 Frontend repository: [mygamingjournal-frontend](https://github.com/DGSimone99/mygamingjournal-frontend)
+Backend for **MyGamingJournal**, a video game journal: personal library, achievement progress, reviews,
+follows, matchmaking and levels.
 
----
+## Architecture
 
-## ⚙️ Tecnologie utilizzate
+- **Spring Boot 4.1 · Java 21 · PostgreSQL · Flyway**
+- The database stores **only user data**. Games and achievements are referenced by their
+  [RAWG](https://rawg.io/apidocs) ids, and no catalog data is persisted.
+- Game data is served through a **RAWG proxy** (`/api/games`, `/api/genres`, `/api/platforms`) with
+  short-lived in-memory caches (Caffeine). The API key stays on the server.
+- JWT authentication, errors as RFC 9457 `ProblemDetail`, OpenAPI documentation.
 
-- Spring Boot
-- Spring Security + JWT
-- JPA (Hibernate)
-- PostgreSQL
-- Integrazione con [RAWG Video Games Database API](https://rawg.io/apidocs)
+## Run locally
 
----
+Prerequisites: **JDK 21** and **Docker**.
 
-## 🧠 Funzionalità principali del backend
+1. `cp .env.example .env` and set `RAWG_API_KEY` (free at https://rawg.io/apidocs).
+   Without it the app still starts; catalog endpoints answer 503.
+2. `./mvnw spring-boot:run`. The `dev` profile starts PostgreSQL from `compose.yaml` automatically.
+3. Open http://localhost:8080/swagger-ui.html
 
-- Autenticazione e registrazione con JWT
-- Gestione utenti e profili pubblici
-- CRUD completo per giochi personali
-- Sistema di voto, recensione, ore giocate e obiettivi
-- Matchmaking in base a lingua e piattaforma
-- Livellamento utente in base all’attività
-- Integrazione con l’API RAWG per il recupero di informazioni videoludiche (titolo, descrizione, copertine, trofei, ecc.)
-- Sistema di mapping interno che trasforma i dati esterni in oggetti persistenti del database locale così da garantire una navigazione rapida
+## Tests
+
+```bash
+./mvnw verify
+```
+
+Integration tests run against a real PostgreSQL in Testcontainers; RAWG is always mocked.
+
+## Configuration
+
+| Variable | Purpose |
+|---|---|
+| `RAWG_API_KEY` | RAWG API key |
+| `JWT_SECRET` | at least 32 bytes; required outside `dev` |
+| `CLOUDINARY_URL` | avatar uploads (optional) |
+| `CORS_ALLOWED_ORIGINS` | comma-separated frontend origins |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | database outside `dev` |
+
+## Credits
+
+Game data and images are provided by [RAWG](https://rawg.io).
