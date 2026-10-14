@@ -28,6 +28,21 @@ class RawgMapperTest {
     }
 
     @Test
+    void stripsTheHeadingRawgPutsInFrontOfRequirements() {
+        var raw = RawgFixtures.gameDetails(1, "X");
+        var withHeadings = new RawgModels.RawgGameDetails(raw.id(), raw.slug(), raw.name(), raw.descriptionRaw(),
+                raw.released(), raw.backgroundImage(), raw.rating(), raw.metacritic(), raw.esrbRating(),
+                raw.redditUrl(), raw.achievementsCount(), raw.genres(), raw.parentPlatforms(),
+                List.of(new RawgModels.RawgPlatformEntry(new RawgModels.RawgNamed(4, "PC", "pc"),
+                        new RawgModels.RawgRequirements("Minimum:\nOS: Windows 10", "Recommended:\r\nOS: Windows 11"))),
+                raw.developers(), raw.publishers(), raw.tags());
+
+        GameDetails details = RawgMapper.toDetails(withHeadings, List.of());
+
+        assertThat(details.requirements()).isEqualTo(new Requirements("OS: Windows 10", "OS: Windows 11"));
+    }
+
+    @Test
     void toleratesMissingOptionalFields() {
         RawgGame sparse = new RawgGame(1, "x", "X", "", null, null, null, null, null);
 

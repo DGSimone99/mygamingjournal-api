@@ -51,9 +51,17 @@ final class RawgMapper {
                 .map(RawgPlatformEntry::requirements)
                 .filter(Objects::nonNull)
                 .filter(req -> req.minimum() != null || req.recommended() != null)
-                .map(req -> new Requirements(req.minimum(), req.recommended()))
+                .map(req -> new Requirements(stripHeading(req.minimum()), stripHeading(req.recommended())))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /** RAWG prefixes requirement texts with "Minimum:" / "Recommended:"; the field name already says that. */
+    private static String stripHeading(String text) {
+        if (text == null) {
+            return null;
+        }
+        return blankToNull(text.replaceFirst("^\\s*(Minimum|Recommended)\\s*:\\s*", "").strip());
     }
 
     private static List<String> platformSlugs(List<RawgParentPlatform> platforms) {

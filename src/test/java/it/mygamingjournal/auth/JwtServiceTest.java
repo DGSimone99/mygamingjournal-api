@@ -2,7 +2,9 @@ package it.mygamingjournal.auth;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.util.Base64;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -42,6 +44,18 @@ class JwtServiceTest {
     @Test
     void garbageIsRejected() {
         assertThat(serviceAt(NOW).parseUserId("not-a-jwt")).isEmpty();
+    }
+
+    @Test
+    void tokensAreSignedWithHs256EvenWithALongSecret() {
+        String longSecret = "x".repeat(64); // would select HS512 if the algorithm were derived from key size
+        JwtService service = new JwtService(new JwtProperties(longSecret, Duration.ofDays(7)),
+                Clock.fixed(NOW, ZoneOffset.UTC));
+
+        String header = new String(Base64.getUrlDecoder().decode(service.generateToken(1L).split("\\.")[0]),
+                StandardCharsets.UTF_8);
+
+        assertThat(header).contains("\"alg\":\"HS256\"");
     }
 
     @Test

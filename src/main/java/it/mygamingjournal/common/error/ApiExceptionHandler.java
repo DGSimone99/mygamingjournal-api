@@ -4,6 +4,8 @@ import it.mygamingjournal.auth.InvalidCredentialsException;
 import it.mygamingjournal.catalog.RawgUnavailableException;
 import it.mygamingjournal.catalog.RawgUpstreamException;
 import it.mygamingjournal.media.MediaUnavailableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,8 @@ import java.util.List;
 
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     @ExceptionHandler(NotFoundException.class)
     ProblemDetail handleNotFound(NotFoundException ex) {
@@ -62,6 +66,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex) {
         // Unique constraints racing past the service-level checks.
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Resource already exists");
+    }
+
+    /** Last resort: the client gets a generic ProblemDetail, the details go to the log only. */
+    @ExceptionHandler(Exception.class)
+    ProblemDetail handleUnexpected(Exception ex) {
+        log.error("Unhandled exception", ex);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error");
     }
 
     @Override

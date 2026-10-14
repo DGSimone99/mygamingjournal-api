@@ -31,6 +31,11 @@ class ErrorTestController {
         throw new BadRequestException("Thing is wrong");
     }
 
+    @GetMapping("/boom")
+    void boom() {
+        throw new IllegalStateException("internal detail that must not leak");
+    }
+
     @PostMapping("/body")
     void body(@Valid @RequestBody Body body) {
     }

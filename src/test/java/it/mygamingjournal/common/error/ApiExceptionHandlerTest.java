@@ -44,6 +44,14 @@ class ApiExceptionHandlerTest {
     }
 
     @Test
+    void unexpectedErrorBecomesGeneric500ProblemDetail() throws Exception {
+        mockMvc.perform(get("/test/boom"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value("Unexpected error"));
+    }
+
+    @Test
     void invalidBodyListsFieldErrors() throws Exception {
         mockMvc.perform(post("/test/body").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"\"}"))
                 .andExpect(status().isBadRequest())
