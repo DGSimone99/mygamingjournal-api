@@ -1,6 +1,8 @@
 package it.mygamingjournal.common.error;
 
 import it.mygamingjournal.auth.InvalidCredentialsException;
+import it.mygamingjournal.catalog.RawgUnavailableException;
+import it.mygamingjournal.catalog.RawgUpstreamException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -38,6 +40,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(RawgUnavailableException.class)
+    ProblemDetail handleRawgUnavailable(RawgUnavailableException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+
+    @ExceptionHandler(RawgUpstreamException.class)
+    ProblemDetail handleRawgUpstream(RawgUpstreamException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

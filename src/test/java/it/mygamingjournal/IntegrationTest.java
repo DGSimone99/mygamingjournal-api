@@ -1,7 +1,11 @@
 package it.mygamingjournal;
 
 import com.jayway.jsonpath.JsonPath;
+import it.mygamingjournal.catalog.CatalogService;
+import it.mygamingjournal.catalog.RawgApi;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -25,6 +29,18 @@ public abstract class IntegrationTest {
 
     @Autowired
     protected JdbcTemplate jdbcTemplate;
+
+    @MockitoBean
+    protected RawgApi rawgApi;
+
+    @Autowired
+    protected CatalogService catalogService;
+
+    @BeforeEach
+    void clearCatalogCaches() {
+        // The Spring context (and its caches) is shared between test classes.
+        catalogService.clearCaches();
+    }
 
     @AfterEach
     void cleanDatabase() {
