@@ -26,6 +26,7 @@ import java.util.Map;
 public class LibraryController {
 
     private final LibraryService library;
+    private final AvailabilityService availability;
 
     @GetMapping
     public PageResponse<LibraryEntryResponse> getLibrary(@AuthenticationPrincipal AuthUser me,
@@ -50,5 +51,17 @@ public class LibraryController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@AuthenticationPrincipal AuthUser me, @PathVariable @Positive long rawgGameId) {
         library.delete(me.id(), rawgGameId);
+    }
+
+    @PutMapping("/{rawgGameId}/availability")
+    public AvailabilityResponse setAvailability(@AuthenticationPrincipal AuthUser me,
+            @PathVariable @Positive long rawgGameId, @Valid @RequestBody AvailabilityRequest request) {
+        return availability.set(me.id(), rawgGameId, request);
+    }
+
+    @DeleteMapping("/{rawgGameId}/availability")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void clearAvailability(@AuthenticationPrincipal AuthUser me, @PathVariable @Positive long rawgGameId) {
+        availability.clear(me.id(), rawgGameId);
     }
 }
