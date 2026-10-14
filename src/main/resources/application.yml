@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: mygamingjournal-api
+  config:
+    import: optional:file:.env[.properties]
+  profiles:
+    default: dev
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/mygamingjournal}
+    username: ${DB_USERNAME:mgj}
+    password: ${DB_PASSWORD:mgj}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  docker:
+    compose:
+      enabled: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration: 7d
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  cloudinary:
+    url: ${CLOUDINARY_URL:}
+
+rawg:
+  base-url: https://api.rawg.io/api
+  api-key: ${RAWG_API_KEY:}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start-only
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-dev-only-secret-dev-only}
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+app:
+  jwt:
+    secret: test-secret-test-secret-test-secret-0123
+rawg:
+  api-key: test-key
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+server:
+  forward-headers-strategy: framework

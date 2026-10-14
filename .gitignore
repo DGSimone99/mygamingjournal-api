@@ -1,55 +1,27 @@
-HELP.md
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+HELP.md
 
-### STS ###
-.apt_generated
+### IDEs ###
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
 .classpath
 .factorypath
 .project
-.settings
-.springBeans
-.sts4-cache
+.settings/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
-# Spring Boot config
-application.properties
-application.yml
-application-*.yml
-
-# Log files
+### Logs ###
 *.log
 logs/
 
-# Build artifacts
-*.class
-*.jar
-*.war
-
-# OS and IDE temp files
+### OS ###
 .DS_Store
 
-# Env files (esclude credenziali e segreti)
+### Plan execution scratch ###
+.superpowers/
+
+### Secrets: copy .env.example to .env ###
 .env
 .env.local
-.env.*.local
